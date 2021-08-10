@@ -1,11 +1,14 @@
-import {useRef, useState} from "react";
+import {useMemo, useState} from "react";
 import Counter from "./component/Counter";
 import ClassCounter from "./component/ClassCounter";
 import "./styles/App.css"
 import PostList from "./component/PostList";
-import MyButton from "./component/UI/button/MyButton";
 import MyInput from "./component/UI/input/MyInput";
 import PostForm from "./component/PostForm";
+import MySelect from "./component/UI/select/MySelect";
+import PostFilter from "./component/PostFilter";
+import MyModal from "./component/UI/myModal/MyModal";
+import MyButton from "./component/UI/button/MyButton";
 
 function App() {
 
@@ -21,8 +24,24 @@ function App() {
     )
 
 
+    const [filter, setFilter] = useState({sort: '', query: ''})
+    const [modal,setModal]=useState(false)
+
+
+    const sortedPosts = useMemo(() => {
+        if (filter.sort) {
+            return [...posts].sort((a, b) => a[filter.sort].localeCompare(b[filter.sort]))
+        }
+        return posts
+    }, [filter.sort, posts])
+
+    const sortedAndSearchedPosts = useMemo(() => {
+        return sortedPosts.filter(post => post.title.toLowerCase().includes(filter.query))
+    }, [filter.query, sortedPosts])
+
     const createPost = (newPost) => {
         setPosts([...posts, newPost])
+        setModal(false)
     }
 
     const removePost = (post) => {
@@ -32,8 +51,22 @@ function App() {
 
     return (
         <div className='App'>
-            <PostForm create={createPost}/>
-            <PostList remove={removePost} posts={posts} title={'Post List 1'}/>
+            <MyButton style={{marginTop:'15px'}} onClick={() =>setModal(true)}>
+                Create user
+            </MyButton>
+            <MyModal
+                visible={modal}
+                setVisible={setModal}
+            >
+                <PostForm create={createPost}/>
+            </MyModal>
+
+            <hr style={{margin: '15px 0'}}/>
+            <PostFilter
+                filter={filter}
+                setFilter={setFilter}
+            />
+            <PostList remove={removePost} posts={sortedAndSearchedPosts} title={'Post List 1'}/>
             <Counter/>
             <ClassCounter/>
         </div>
